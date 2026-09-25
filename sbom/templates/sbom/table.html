@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Перечень компонентов</title>
+
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+
+        .search {
+            margin-bottom: 20px;
+        }
+
+
+        .search-form {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+
+        .search-form input[type="text"] {
+            width: 400px;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+
+        .search-form button {
+            padding: 8px 14px;
+            cursor: pointer;
+        }
+
+
+        .link-filter {
+            margin-top: 10px;
+        }
+
+
+        .link-filter button {
+            padding: 8px 14px;
+            cursor: pointer;
+        }
+
+
+        .search-result {
+            margin-top: 8px;
+        }
+
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 1450px;
+        }
+
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 6px;
+            vertical-align: top;
+        }
+
+
+        th {
+            background: #f0f0f0;
+        }
+
+
+        input,
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+
+        .external-reference-cell {
+            min-height: 150px;
+        }
+
+
+        .external-reference-view {
+            min-height: 150px;
+            padding: 5px;
+            box-sizing: border-box;
+            overflow-wrap: anywhere;
+            cursor: text;
+        }
+
+
+        .external-reference-view a {
+            color: #0645ad;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+
+        .external-reference-editor {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+
+        .pagination a {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            text-decoration: none;
+            color: #0645ad;
+        }
+
+
+        .pagination a:hover {
+            background: #f0f0f0;
+        }
+
+
+        .pagination span {
+            padding: 6px 10px;
+        }
+
+
+        .actions {
+            margin-top: 20px;
+        }
+
+
+        button {
+            padding: 10px 16px;
+            cursor: pointer;
+        }
+
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #e7f5e7;
+        }
+
+
+        .error {
+            background: #f8d7da;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <h1>
+        Перечень заимствованных компонентов
+    </h1>
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="message">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <div class="search">
+
+
+        <form
+            method="get"
+            class="search-form"
+        >
+
+            <input
+                type="text"
+                name="q"
+                value="{{ search_query }}"
+                placeholder="Поиск по externalReferences"
+            >
+
+
+            <button type="submit">
+                Найти
+            </button>
+
+        </form>
+
+
+        <form
+            method="get"
+            class="link-filter"
+        >
+
+            {% if search_query %}
+
+                <input
+                    type="hidden"
+                    name="q"
+                    value="{{ search_query }}"
+                >
+
+            {% endif %}
+
+
+            <input
+                type="hidden"
+                name="only_links"
+                value="1"
+            >
+
+
+            <button type="submit">
+                Только ссылки
+            </button>
+
+
+            {% if search_query or only_links %}
+
+                <a
+                    href="{% url 'component_list' %}"
+                >
+                    Сбросить
+                </a>
+
+            {% endif %}
+
+        </form>
+
+
+        {% if search_query or only_links %}
+
+            <div class="search-result">
+
+                Найдено компонентов:
+                {{ page_obj.paginator.count }}
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <form id="components-form">
+
+        {% csrf_token %}
+
+
+        <div class="table-container">
+
+
+            <table>
+
+
+                <thead>
+
+                    <tr>
+
+                        <th>№</th>
+                        <th>Component</th>
+                        <th>Version</th>
+                        <th>Type</th>
+                        <th>BOM Reference</th>
+                        <th>PURL</th>
+                        <th>externalReferences</th>
+                        <th>Lang</th>
+                        <th>attack_surface</th>
+                        <th>security_function</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="components-table-body">
+
+
+                    {% for component in page_obj %}
+
+                        <tr data-id="{{ component.id }}">
+
+
+                            <td>
+                                {{ page_obj.start_index|add:forloop.counter0 }}
+                            </td>
+
+
+                            <td>
+
+                                <input
+                                    type="text"
+                                    data-field="component"
+                                    value="{{ component.component }}"
+                                >
+
+                            </td>
+
+
+                            <td>
+
+                                <input
+                                    type="text"
+                                    data-field="version"
+                                    value="{{ component.version }}"
+                                >
+
+                            </td>
+
+
+                            <td>
+
+                                <input
+                                    type="text"
+                                    data-field="type"
+                                    value="{{ component.type }}"
+                                >
+
+                            </td>
+
+
+                            <td>
+
+                                <input
+                                    type="text"
+                                    data-field="bom_reference"
+                                    value="{{ component.bom_reference }}"
+                                >
+
+                            </td>
+
+
+                            <td>
+
+                                <textarea
+                                    data-field="purl"
+                                >{{ component.purl }}</textarea>
+
+                            </td>
+
+
+                            <td>
+
+                                <div
+                                    class="external-reference-cell"
+                                >
+
+                                    <div
+                                        class="external-reference-view"
+                                    >
+
+                                        {% if component.external_reference_url %}
+
+                                            <a
+                                                href="{{ component.external_reference_url }}"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                {{ component.external_reference_url }}
+                                            </a>
+
+                                        {% else %}
+
+                                            {{ component.external_references }}
+
+                                        {% endif %}
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                <input
+                                    type="text"
+                                    data-field="lang"
+                                    value="{{ component.lang }}"
+                                >
+
+                            </td>
+
+
+                            <td>
+
+                                <input
+                                    type="text"
+                                    data-field="attack_surface"
+                                    value="{{ component.attack_surface }}"
+                                >
+
+                            </td>
+
+
+                            <td>
+
+                                <input
+                                    type="text"
+                                    data-field="security_function"
+                                    value="{{ component.security_function }}"
+                                >
+
+                            </td>
+
+
+                        </tr>
+
+                    {% endfor %}
+
+
+                </tbody>
+
+            </table>
+
+
+        </div>
+
+
+        <div class="pagination">
+
+
+            {% if page_obj.has_previous %}
+
+                <a
+                    href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if only_links %}&only_links=1{% endif %}"
+                >
+                    Назад
+                </a>
+
+            {% endif %}
+
+
+            <span>
+
+                Страница
+                {{ page_obj.number }}
+                из
+                {{ page_obj.paginator.num_pages }}
+
+            </span>
+
+
+            {% if page_obj.has_next %}
+
+                <a
+                    href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if only_links %}&only_links=1{% endif %}"
+                >
+                    Вперёд
+                </a>
+
+            {% endif %}
+
+
+        </div>
+
+
+        <div class="actions">
+
+            <button
+                type="button"
+                id="save-changes"
+            >
+                Сохранить изменения
+            </button>
+
+        </div>
+
+
+    </form>
+
+
+    <script>
+
+
+        const form =
+            document.getElementById(
+                "components-form"
+            );
+
+
+        const saveButton =
+            document.getElementById(
+                "save-changes"
+            );
+
+
+        const tableBody =
+            document.getElementById(
+                "components-table-body"
+            );
+
+
+        function getFieldValue(field) {
+
+            return field.value;
+
+        }
+
+
+        /*
+         * Клик по самой ссылке не перехватывается.
+         *
+         * Браузер самостоятельно выполняет
+         * переход по <a>.
+         *
+         * Клик по свободному месту externalReferences
+         * переводит конкретную ячейку в режим редактирования.
+         */
+
+
+        tableBody.addEventListener(
+            "click",
+            (event) => {
+
+
+                if (
+                    event.target.closest(
+                        ".external-reference-view a"
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                const cell =
+                    event.target.closest(
+                        ".external-reference-cell"
+                    );
+
+
+                if (!cell) {
+
+                    return;
+
+                }
+
+
+                if (
+                    cell.querySelector(
+                        ".external-reference-editor"
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                const view =
+                    cell.querySelector(
+                        ".external-reference-view"
+                    );
+
+
+                if (!view) {
+
+                    return;
+
+                }
+
+
+                const textarea =
+                    document.createElement(
+                        "textarea"
+                    );
+
+
+                textarea.className =
+                    "external-reference-editor";
+
+
+                textarea.dataset.field =
+                    "external_references";
+
+
+                textarea.value =
+                    view.textContent.trim();
+
+
+                textarea.dataset.originalValue =
+                    textarea.value;
+
+
+                view.replaceWith(
+                    textarea
+                );
+
+
+                textarea.focus();
+
+
+                textarea.setSelectionRange(
+                    textarea.value.length,
+                    textarea.value.length
+                );
+
+            }
+        );
+
+
+        saveButton.addEventListener(
+            "click",
+            async () => {
+
+
+                const rows =
+                    document.querySelectorAll(
+                        "tbody tr[data-id]"
+                    );
+
+
+                const changes = [];
+
+
+                rows.forEach(
+                    (row) => {
+
+
+                        const change = {
+                            id: Number(
+                                row.dataset.id
+                            ),
+                        };
+
+
+                        let hasChanges =
+                            false;
+
+
+                        row.querySelectorAll(
+                            "[data-field]"
+                        ).forEach(
+                            (field) => {
+
+
+                                const currentValue =
+                                    getFieldValue(
+                                        field
+                                    );
+
+
+                                const originalValue =
+                                    field.dataset
+                                        .originalValue;
+
+
+                                if (
+                                    originalValue !==
+                                    undefined &&
+                                    currentValue !==
+                                    originalValue
+                                ) {
+
+
+                                    change[
+                                        field.dataset.field
+                                    ] = currentValue;
+
+
+                                    hasChanges =
+                                        true;
+
+                                }
+
+                            }
+                        );
+
+
+                        if (hasChanges) {
+
+                            changes.push(
+                                change
+                            );
+
+                        }
+
+                    }
+                );
+
+
+                if (
+                    changes.length === 0
+                ) {
+
+
+                    alert(
+                        "Изменений для сохранения нет."
+                    );
+
+
+                    return;
+
+                }
+
+
+                const csrfToken =
+                    form.querySelector(
+                        "[name=csrfmiddlewaretoken]"
+                    ).value;
+
+
+                try {
+
+
+                    const response =
+                        await fetch(
+                            "{% url 'component_list' %}",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+
+                                    "X-CSRFToken":
+                                        csrfToken,
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        changes
+                                    ),
+                            }
+                        );
+
+
+                    const result =
+                        await response.json();
+
+
+                    if (
+                        !response.ok ||
+                        !result.success
+                    ) {
+
+
+                        throw new Error(
+                            result.error ||
+                            "Ошибка сохранения."
+                        );
+
+                    }
+
+
+                    alert(
+                        `Сохранено компонентов: ${result.updated}`
+                    );
+
+
+                    window.location.reload();
+
+                } catch (error) {
+
+
+                    alert(
+                        `Ошибка: ${error.message}`
+                    );
+
+                }
+
+            }
+        );
+
+
+        document
+            .querySelectorAll(
+                "[data-field]"
+            )
+            .forEach(
+                (field) => {
+
+                    field.dataset.originalValue =
+                        getFieldValue(
+                            field
+                        );
+
+                }
+            );
+
+
+    </script>
+
+
+</body>
+
+</html>
