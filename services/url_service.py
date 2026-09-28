@@ -24,7 +24,8 @@ ARCHIVE_EXTENSIONS = (
 
 def get_valid_url(value: str) -> str | None:
     """
-    Находит первый HTTP/HTTPS URL внутри значения.
+    Находит первый HTTP/HTTPS URL
+    внутри значения.
     """
 
     value = (value or "").strip()
@@ -32,7 +33,9 @@ def get_valid_url(value: str) -> str | None:
     if not value:
         return None
 
-    match = URL_PATTERN.search(value)
+    match = URL_PATTERN.search(
+        value
+    )
 
     if not match:
         return None
@@ -41,7 +44,9 @@ def get_valid_url(value: str) -> str | None:
         ".,;:)]}>\"'"
     )
 
-    parsed = urlparse(url)
+    parsed = urlparse(
+        url
+    )
 
     if parsed.scheme not in (
         "http",
@@ -57,13 +62,16 @@ def get_valid_url(value: str) -> str | None:
 
 def is_archive_url(url: str) -> bool:
     """
-    Определяет, указывает ли URL на архив.
+    Определяет, указывает ли URL
+    на архивный файл.
     """
 
     if not url:
         return False
 
-    path = urlparse(url).path.lower()
+    path = urlparse(
+        url
+    ).path.lower()
 
     return path.endswith(
         ARCHIVE_EXTENSIONS

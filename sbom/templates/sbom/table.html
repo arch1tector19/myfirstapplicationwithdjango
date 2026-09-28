@@ -12,7 +12,6 @@
 
     <title>Перечень компонентов</title>
 
-
     <style>
 
         body {
@@ -20,65 +19,23 @@
             margin: 20px;
         }
 
-
         h1 {
             margin-bottom: 20px;
         }
 
-
-        .search {
-            margin-bottom: 20px;
+        h2 {
+            margin-top: 0;
         }
-
-
-        .search-form {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-
-        .search-form input[type="text"] {
-            width: 400px;
-            padding: 8px;
-            box-sizing: border-box;
-        }
-
-
-        .search-form button {
-            padding: 8px 14px;
-            cursor: pointer;
-        }
-
-
-        .link-filter {
-            margin-top: 10px;
-        }
-
-
-        .link-filter button {
-            padding: 8px 14px;
-            cursor: pointer;
-        }
-
-
-        .search-result {
-            margin-top: 8px;
-        }
-
 
         .table-container {
             overflow-x: auto;
         }
 
-
         table {
             border-collapse: collapse;
             width: 100%;
-            min-width: 1450px;
+            min-width: 1400px;
         }
-
 
         th,
         td {
@@ -87,14 +44,13 @@
             vertical-align: top;
         }
 
-
         th {
             background: #f0f0f0;
         }
 
-
         input,
-        textarea {
+        textarea,
+        .external-reference-editor {
             width: 100%;
             box-sizing: border-box;
             padding: 5px;
@@ -102,76 +58,43 @@
             font-size: 14px;
         }
 
-
         textarea {
             min-height: 150px;
             resize: vertical;
         }
 
-
-        .external-reference-cell {
-            min-height: 150px;
-        }
-
-
-        .external-reference-view {
-            min-height: 150px;
-            padding: 5px;
-            box-sizing: border-box;
-            overflow-wrap: anywhere;
-            cursor: text;
-        }
-
-
-        .external-reference-view a {
-            color: #0645ad;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-
         .external-reference-editor {
             min-height: 150px;
-            resize: vertical;
+            border: 1px solid #767676;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
         }
 
-
-        .pagination {
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-
-        .pagination a {
-            padding: 6px 10px;
-            border: 1px solid #ccc;
-            text-decoration: none;
+        .external-reference-editor a {
             color: #0645ad;
+            text-decoration: underline;
         }
-
-
-        .pagination a:hover {
-            background: #f0f0f0;
-        }
-
-
-        .pagination span {
-            padding: 6px 10px;
-        }
-
 
         .actions {
             margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
-
-        button {
+        button,
+        .button-link {
             padding: 10px 16px;
             cursor: pointer;
         }
 
+        .button-link {
+            display: inline-block;
+            border: 1px solid #767676;
+            color: #000;
+            background: #f0f0f0;
+            text-decoration: none;
+        }
 
         .message {
             margin-bottom: 15px;
@@ -179,18 +102,77 @@
             background: #e7f5e7;
         }
 
-
         .error {
             background: #f8d7da;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pagination a {
+            padding: 8px 12px;
+            border: 1px solid #767676;
+            color: #000;
+            text-decoration: none;
+            background: #f0f0f0;
+        }
+
+        .pagination span {
+            padding: 8px 12px;
+        }
+
+        .comparison-result {
+            margin-top: 25px;
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            background: #f7f7f7;
+        }
+
+        .comparison-result.success {
+            background: #e7f5e7;
+        }
+
+        .comparison-result.warning {
+            background: #fff3cd;
+        }
+
+        .comparison-summary {
+            margin-bottom: 15px;
+        }
+
+        .comparison-summary table {
+            min-width: 500px;
+            width: auto;
+        }
+
+        .comparison-details {
+            overflow-x: auto;
+        }
+
+        .status-ok {
+            font-weight: bold;
+        }
+
+        .status-diff {
+            font-weight: bold;
+        }
+
+        .note {
+            margin-top: 10px;
+            color: #555;
         }
 
     </style>
 
 </head>
 
-
 <body>
-
 
     <h1>
         Перечень заимствованных компонентов
@@ -210,82 +192,205 @@
     {% endif %}
 
 
-    <div class="search">
+    {% if comparison_display %}
 
-
-        <form
-            method="get"
-            class="search-form"
+        <div
+            class="
+                comparison-result
+                {% if comparison_display.comparison_matches %}
+                    success
+                {% else %}
+                    warning
+                {% endif %}
+            "
         >
 
-            <input
-                type="text"
-                name="q"
-                value="{{ search_query }}"
-                placeholder="Поиск по externalReferences"
-            >
+            <h2>
+                Результат сравнения SBOM
+            </h2>
 
 
-            <button type="submit">
-                Найти
-            </button>
+            {% if comparison_display.comparison_matches %}
 
-        </form>
+                <p class="status-ok">
+                    Сформированный SBOM полностью
+                    соответствует эталонному SBOM.
+                </p>
 
+            {% else %}
 
-        <form
-            method="get"
-            class="link-filter"
-        >
-
-            {% if search_query %}
-
-                <input
-                    type="hidden"
-                    name="q"
-                    value="{{ search_query }}"
-                >
+                <p class="status-diff">
+                    Сформированный SBOM отличается
+                    от эталонного SBOM.
+                </p>
 
             {% endif %}
 
 
-            <input
-                type="hidden"
-                name="only_links"
-                value="1"
-            >
+            <div class="comparison-summary">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Показатель
+                            </th>
+
+                            <th>
+                                Эталон
+                            </th>
+
+                            <th>
+                                Сформирован
+                            </th>
+
+                        </tr>
+
+                    </thead>
 
 
-            <button type="submit">
-                Только ссылки
-            </button>
+                    <tbody>
 
+                        {% for row in comparison_display.rows %}
 
-            {% if search_query or only_links %}
+                            <tr>
 
-                <a
-                    href="{% url 'component_list' %}"
-                >
-                    Сбросить
-                </a>
+                                <td>
+                                    {{ row.label }}
+                                </td>
 
-            {% endif %}
+                                <td>
+                                    {{ row.reference }}
+                                </td>
 
-        </form>
+                                <td>
+                                    {{ row.generated }}
+                                </td>
 
+                            </tr>
 
-        {% if search_query or only_links %}
+                        {% endfor %}
 
-            <div class="search-result">
+                    </tbody>
 
-                Найдено компонентов:
-                {{ page_obj.paginator.count }}
+                </table>
 
             </div>
 
-        {% endif %}
 
-    </div>
+            <div class="comparison-details">
+
+                <p>
+
+                    <strong>
+                        Формат:
+                    </strong>
+
+                    {{ comparison_display.bom_format }}
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        Версия спецификации:
+                    </strong>
+
+                    {{ comparison_display.spec_version }}
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        Версия SBOM:
+                    </strong>
+
+                    {{ comparison_display.version }}
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        PURL:
+                    </strong>
+
+                    {{ comparison_display.purl_difference_count }}
+
+                    отличий.
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        External References:
+                    </strong>
+
+                    найдено различий:
+
+                    {{ comparison_display.external_reference_difference_count }}.
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        Типы External References в эталоне:
+                    </strong>
+
+                    {{ comparison_display.reference_types_text }}.
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        Типы External References у нас:
+                    </strong>
+
+                    {{ comparison_display.generated_types_text }}.
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        References с hashes:
+                    </strong>
+
+                    эталон —
+                    {{ comparison_display.reference_hashes }},
+
+                    сформирован —
+                    {{ comparison_display.generated_hashes }}.
+
+                </p>
+
+
+                <p class="note">
+
+                    Сравнение выполняется по данным,
+                    сохранённым в базе данных приложения.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    {% endif %}
 
 
     <form id="components-form">
@@ -295,24 +400,47 @@
 
         <div class="table-container">
 
-
             <table>
-
 
                 <thead>
 
                     <tr>
 
-                        <th>№</th>
-                        <th>Component</th>
-                        <th>Version</th>
-                        <th>Type</th>
-                        <th>BOM Reference</th>
-                        <th>PURL</th>
-                        <th>externalReferences</th>
-                        <th>Lang</th>
-                        <th>attack_surface</th>
-                        <th>security_function</th>
+                        <th>
+                            Component
+                        </th>
+
+                        <th>
+                            Version
+                        </th>
+
+                        <th>
+                            Type
+                        </th>
+
+                        <th>
+                            BOM Reference
+                        </th>
+
+                        <th>
+                            PURL
+                        </th>
+
+                        <th>
+                            externalReferences
+                        </th>
+
+                        <th>
+                            Lang
+                        </th>
+
+                        <th>
+                            attack_surface
+                        </th>
+
+                        <th>
+                            security_function
+                        </th>
 
                     </tr>
 
@@ -321,16 +449,11 @@
 
                 <tbody id="components-table-body">
 
-
                     {% for component in page_obj %}
 
-                        <tr data-id="{{ component.id }}">
-
-
-                            <td>
-                                {{ page_obj.start_index|add:forloop.counter0 }}
-                            </td>
-
+                        <tr
+                            data-id="{{ component.id }}"
+                        >
 
                             <td>
 
@@ -388,30 +511,42 @@
                             <td>
 
                                 <div
-                                    class="external-reference-cell"
+                                    class="external-reference-editor"
+                                    data-field="external_references"
+                                    contenteditable="true"
+                                    spellcheck="false"
                                 >
 
-                                    <div
-                                        class="external-reference-view"
-                                    >
+                                    {% if component.external_reference_url %}
 
-                                        {% if component.external_reference_url %}
+                                        {% if component.external_reference_is_archive %}
 
                                             <a
                                                 href="{{ component.external_reference_url }}"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                                download
+                                                contenteditable="false"
                                             >
                                                 {{ component.external_reference_url }}
                                             </a>
 
                                         {% else %}
 
-                                            {{ component.external_references }}
+                                            <a
+                                                href="{{ component.external_reference_url }}"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                contenteditable="false"
+                                            >
+                                                {{ component.external_reference_url }}
+                                            </a>
 
                                         {% endif %}
 
-                                    </div>
+                                    {% else %}
+
+                                        {{ component.external_references }}
+
+                                    {% endif %}
 
                                 </div>
 
@@ -450,54 +585,13 @@
 
                             </td>
 
-
                         </tr>
 
                     {% endfor %}
 
-
                 </tbody>
 
             </table>
-
-
-        </div>
-
-
-        <div class="pagination">
-
-
-            {% if page_obj.has_previous %}
-
-                <a
-                    href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if only_links %}&only_links=1{% endif %}"
-                >
-                    Назад
-                </a>
-
-            {% endif %}
-
-
-            <span>
-
-                Страница
-                {{ page_obj.number }}
-                из
-                {{ page_obj.paginator.num_pages }}
-
-            </span>
-
-
-            {% if page_obj.has_next %}
-
-                <a
-                    href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if only_links %}&only_links=1{% endif %}"
-                >
-                    Вперёд
-                </a>
-
-            {% endif %}
-
 
         </div>
 
@@ -511,14 +605,64 @@
                 Сохранить изменения
             </button>
 
-        </div>
 
+            <a
+                href="{% url 'generate_sbom' %}"
+                class="button-link"
+            >
+                Сформировать SBOM JSON
+            </a>
+
+
+            <a
+                href="{% url 'compare_sbom' %}"
+                class="button-link"
+            >
+                Сравнить с эталонным SBOM
+            </a>
+
+        </div>
 
     </form>
 
 
-    <script>
+    <div class="pagination">
 
+        {% if page_obj.has_previous %}
+
+            <a
+                href="?page={{ page_obj.previous_page_number }}"
+            >
+                Назад
+            </a>
+
+        {% endif %}
+
+
+        <span>
+
+            Страница
+            {{ page_obj.number }}
+            из
+            {{ page_obj.paginator.num_pages }}
+
+        </span>
+
+
+        {% if page_obj.has_next %}
+
+            <a
+                href="?page={{ page_obj.next_page_number }}"
+            >
+                Далее
+            </a>
+
+        {% endif %}
+
+    </div>
+
+
+    <script>
 
         const form =
             document.getElementById(
@@ -540,203 +684,93 @@
 
         function getFieldValue(field) {
 
-            return field.value;
+            if (
+                field.tagName === "INPUT" ||
+                field.tagName === "TEXTAREA"
+            ) {
 
-        }
-
-
-        /*
-         * Клик по самой ссылке не перехватывается.
-         *
-         * Браузер самостоятельно выполняет
-         * переход по <a>.
-         *
-         * Клик по свободному месту externalReferences
-         * переводит конкретную ячейку в режим редактирования.
-         */
-
-
-        tableBody.addEventListener(
-            "click",
-            (event) => {
-
-
-                if (
-                    event.target.closest(
-                        ".external-reference-view a"
-                    )
-                ) {
-
-                    return;
-
-                }
-
-
-                const cell =
-                    event.target.closest(
-                        ".external-reference-cell"
-                    );
-
-
-                if (!cell) {
-
-                    return;
-
-                }
-
-
-                if (
-                    cell.querySelector(
-                        ".external-reference-editor"
-                    )
-                ) {
-
-                    return;
-
-                }
-
-
-                const view =
-                    cell.querySelector(
-                        ".external-reference-view"
-                    );
-
-
-                if (!view) {
-
-                    return;
-
-                }
-
-
-                const textarea =
-                    document.createElement(
-                        "textarea"
-                    );
-
-
-                textarea.className =
-                    "external-reference-editor";
-
-
-                textarea.dataset.field =
-                    "external_references";
-
-
-                textarea.value =
-                    view.textContent.trim();
-
-
-                textarea.dataset.originalValue =
-                    textarea.value;
-
-
-                view.replaceWith(
-                    textarea
-                );
-
-
-                textarea.focus();
-
-
-                textarea.setSelectionRange(
-                    textarea.value.length,
-                    textarea.value.length
-                );
+                return field.value;
 
             }
-        );
+
+            return field.innerText.trim();
+
+        }
 
 
         saveButton.addEventListener(
             "click",
             async () => {
 
-
                 const rows =
                     document.querySelectorAll(
                         "tbody tr[data-id]"
                     );
 
-
                 const changes = [];
 
 
-                rows.forEach(
-                    (row) => {
+                rows.forEach((row) => {
+
+                    const change = {
+                        id: Number(
+                            row.dataset.id
+                        ),
+                    };
 
 
-                        const change = {
-                            id: Number(
-                                row.dataset.id
-                            ),
-                        };
+                    let hasChanges = false;
 
 
-                        let hasChanges =
-                            false;
-
-
-                        row.querySelectorAll(
+                    row
+                        .querySelectorAll(
                             "[data-field]"
-                        ).forEach(
-                            (field) => {
+                        )
+                        .forEach((field) => {
+
+                            const currentValue =
+                                getFieldValue(
+                                    field
+                                );
 
 
-                                const currentValue =
-                                    getFieldValue(
-                                        field
-                                    );
+                            const originalValue =
+                                field.dataset
+                                    .originalValue;
 
 
-                                const originalValue =
-                                    field.dataset
-                                        .originalValue;
-
-
-                                if (
-                                    originalValue !==
+                            if (
+                                originalValue !==
                                     undefined &&
-                                    currentValue !==
+                                currentValue !==
                                     originalValue
-                                ) {
+                            ) {
 
+                                change[
+                                    field.dataset.field
+                                ] = currentValue;
 
-                                    change[
-                                        field.dataset.field
-                                    ] = currentValue;
-
-
-                                    hasChanges =
-                                        true;
-
-                                }
+                                hasChanges = true;
 
                             }
-                        );
+
+                        });
 
 
-                        if (hasChanges) {
+                    if (hasChanges) {
 
-                            changes.push(
-                                change
-                            );
-
-                        }
+                        changes.push(change);
 
                     }
-                );
+
+                });
 
 
-                if (
-                    changes.length === 0
-                ) {
-
+                if (changes.length === 0) {
 
                     alert(
                         "Изменений для сохранения нет."
                     );
-
 
                     return;
 
@@ -750,7 +784,6 @@
 
 
                 try {
-
 
                     const response =
                         await fetch(
@@ -783,7 +816,6 @@
                         !result.success
                     ) {
 
-
                         throw new Error(
                             result.error ||
                             "Ошибка сохранения."
@@ -792,15 +824,31 @@
                     }
 
 
+                    rows.forEach((row) => {
+
+                        row
+                            .querySelectorAll(
+                                "[data-field]"
+                            )
+                            .forEach((field) => {
+
+                                field.dataset
+                                    .originalValue =
+                                    getFieldValue(
+                                        field
+                                    );
+
+                            });
+
+                    });
+
+
                     alert(
                         `Сохранено компонентов: ${result.updated}`
                     );
 
 
-                    window.location.reload();
-
                 } catch (error) {
-
 
                     alert(
                         `Ошибка: ${error.message}`
@@ -816,20 +864,32 @@
             .querySelectorAll(
                 "[data-field]"
             )
-            .forEach(
-                (field) => {
+            .forEach((field) => {
 
-                    field.dataset.originalValue =
-                        getFieldValue(
-                            field
-                        );
+                field.dataset.originalValue =
+                    getFieldValue(field);
+
+            });
+
+
+        tableBody.addEventListener(
+            "click",
+            (event) => {
+
+                if (
+                    event.target.closest(
+                        ".external-reference-editor a"
+                    )
+                ) {
+
+                    return;
 
                 }
-            );
 
+            }
+        );
 
     </script>
-
 
 </body>
 
