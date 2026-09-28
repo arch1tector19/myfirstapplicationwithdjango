@@ -1,8 +1,8 @@
 from django.urls import path
 
 from .views import (
-    compare_sbom_with_reference,
     component_list,
+    generate_docx_file,
     generate_sbom,
     upload_file,
 )
@@ -25,8 +25,8 @@ urlpatterns = [
         name="generate_sbom",
     ),
     path(
-        "components/compare-sbom/",
-        compare_sbom_with_reference,
-        name="compare_sbom",
+        "components/generate-docx/",
+        generate_docx_file,
+        name="generate_docx",
     ),
 ]

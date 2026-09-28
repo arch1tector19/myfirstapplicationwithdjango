@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ru">
 
 <head>
@@ -15,157 +16,229 @@
     <style>
 
         body {
+
             font-family: Arial, sans-serif;
+
             margin: 20px;
+
         }
 
         h1 {
-            margin-bottom: 20px;
-        }
 
-        h2 {
-            margin-top: 0;
+            margin-bottom: 20px;
+
         }
 
         .table-container {
+
             overflow-x: auto;
+
         }
 
         table {
+
             border-collapse: collapse;
+
             width: 100%;
+
             min-width: 1400px;
+
         }
 
         th,
+
         td {
+
             border: 1px solid #ccc;
+
             padding: 6px;
+
             vertical-align: top;
+
         }
 
         th {
+
             background: #f0f0f0;
+
         }
 
         input,
-        textarea,
-        .external-reference-editor {
+
+        textarea {
+
             width: 100%;
+
             box-sizing: border-box;
+
             padding: 5px;
+
             font-family: Arial, sans-serif;
+
             font-size: 14px;
+
         }
 
         textarea {
+
             min-height: 150px;
+
             resize: vertical;
+
+        }
+
+        .external-reference-cell {
+
+            min-height: 150px;
+
+        }
+
+        .external-reference-view {
+
+            min-height: 150px;
+
+            padding: 5px;
+
+            box-sizing: border-box;
+
+            overflow-wrap: anywhere;
+
+            word-break: normal;
+
+            white-space: normal;
+
+            line-height: 1.4;
+
+            font-size: 16px;
+
+        }
+
+        .external-reference-view a {
+
+            color: #0645ad;
+
+            text-decoration: underline;
+
+            cursor: pointer;
+
+        }
+
+        .external-reference-view a:hover {
+
+            text-decoration: underline;
+
         }
 
         .external-reference-editor {
-            min-height: 150px;
-            border: 1px solid #767676;
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-        }
 
-        .external-reference-editor a {
-            color: #0645ad;
-            text-decoration: underline;
+            width: 100%;
+
+            min-height: 150px;
+
+            box-sizing: border-box;
+
+            padding: 5px;
+
+            resize: vertical;
+
+            font-family: Arial, sans-serif;
+
+            font-size: 16px;
+
+            line-height: 1.4;
+
+            border: 1px solid #767676;
+
+            white-space: pre-wrap;
+
+            overflow-wrap: anywhere;
+
         }
 
         .actions {
+
             margin-top: 20px;
+
             display: flex;
+
             gap: 10px;
+
             flex-wrap: wrap;
+
         }
 
         button,
+
         .button-link {
+
             padding: 10px 16px;
+
             cursor: pointer;
+
         }
 
         .button-link {
+
             display: inline-block;
+
             border: 1px solid #767676;
+
             color: #000;
+
             background: #f0f0f0;
+
             text-decoration: none;
+
         }
 
         .message {
+
             margin-bottom: 15px;
+
             padding: 10px;
+
             background: #e7f5e7;
+
         }
 
         .error {
+
             background: #f8d7da;
+
         }
 
         .pagination {
+
             margin-top: 20px;
+
             display: flex;
+
             align-items: center;
+
             gap: 10px;
+
             flex-wrap: wrap;
+
         }
 
         .pagination a {
+
             padding: 8px 12px;
+
             border: 1px solid #767676;
+
             color: #000;
+
             text-decoration: none;
+
             background: #f0f0f0;
+
         }
 
         .pagination span {
+
             padding: 8px 12px;
-        }
 
-        .comparison-result {
-            margin-top: 25px;
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            background: #f7f7f7;
-        }
-
-        .comparison-result.success {
-            background: #e7f5e7;
-        }
-
-        .comparison-result.warning {
-            background: #fff3cd;
-        }
-
-        .comparison-summary {
-            margin-bottom: 15px;
-        }
-
-        .comparison-summary table {
-            min-width: 500px;
-            width: auto;
-        }
-
-        .comparison-details {
-            overflow-x: auto;
-        }
-
-        .status-ok {
-            font-weight: bold;
-        }
-
-        .status-diff {
-            font-weight: bold;
-        }
-
-        .note {
-            margin-top: 10px;
-            color: #555;
         }
 
     </style>
@@ -175,7 +248,9 @@
 <body>
 
     <h1>
+
         Перечень заимствованных компонентов
+
     </h1>
 
 
@@ -184,211 +259,12 @@
         {% for message in messages %}
 
             <div class="message">
+
                 {{ message }}
+
             </div>
 
         {% endfor %}
-
-    {% endif %}
-
-
-    {% if comparison_display %}
-
-        <div
-            class="
-                comparison-result
-                {% if comparison_display.comparison_matches %}
-                    success
-                {% else %}
-                    warning
-                {% endif %}
-            "
-        >
-
-            <h2>
-                Результат сравнения SBOM
-            </h2>
-
-
-            {% if comparison_display.comparison_matches %}
-
-                <p class="status-ok">
-                    Сформированный SBOM полностью
-                    соответствует эталонному SBOM.
-                </p>
-
-            {% else %}
-
-                <p class="status-diff">
-                    Сформированный SBOM отличается
-                    от эталонного SBOM.
-                </p>
-
-            {% endif %}
-
-
-            <div class="comparison-summary">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Показатель
-                            </th>
-
-                            <th>
-                                Эталон
-                            </th>
-
-                            <th>
-                                Сформирован
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                        {% for row in comparison_display.rows %}
-
-                            <tr>
-
-                                <td>
-                                    {{ row.label }}
-                                </td>
-
-                                <td>
-                                    {{ row.reference }}
-                                </td>
-
-                                <td>
-                                    {{ row.generated }}
-                                </td>
-
-                            </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-
-            <div class="comparison-details">
-
-                <p>
-
-                    <strong>
-                        Формат:
-                    </strong>
-
-                    {{ comparison_display.bom_format }}
-
-                </p>
-
-
-                <p>
-
-                    <strong>
-                        Версия спецификации:
-                    </strong>
-
-                    {{ comparison_display.spec_version }}
-
-                </p>
-
-
-                <p>
-
-                    <strong>
-                        Версия SBOM:
-                    </strong>
-
-                    {{ comparison_display.version }}
-
-                </p>
-
-
-                <p>
-
-                    <strong>
-                        PURL:
-                    </strong>
-
-                    {{ comparison_display.purl_difference_count }}
-
-                    отличий.
-
-                </p>
-
-
-                <p>
-
-                    <strong>
-                        External References:
-                    </strong>
-
-                    найдено различий:
-
-                    {{ comparison_display.external_reference_difference_count }}.
-
-                </p>
-
-
-                <p>
-
-                    <strong>
-                        Типы External References в эталоне:
-                    </strong>
-
-                    {{ comparison_display.reference_types_text }}.
-
-                </p>
-
-
-                <p>
-
-                    <strong>
-                        Типы External References у нас:
-                    </strong>
-
-                    {{ comparison_display.generated_types_text }}.
-
-                </p>
-
-
-                <p>
-
-                    <strong>
-                        References с hashes:
-                    </strong>
-
-                    эталон —
-                    {{ comparison_display.reference_hashes }},
-
-                    сформирован —
-                    {{ comparison_display.generated_hashes }}.
-
-                </p>
-
-
-                <p class="note">
-
-                    Сравнение выполняется по данным,
-                    сохранённым в базе данных приложения.
-
-                </p>
-
-            </div>
-
-        </div>
 
     {% endif %}
 
@@ -511,42 +387,34 @@
                             <td>
 
                                 <div
-                                    class="external-reference-editor"
-                                    data-field="external_references"
-                                    contenteditable="true"
-                                    spellcheck="false"
+                                    class="external-reference-cell"
                                 >
 
-                                    {% if component.external_reference_url %}
+                                    <div
+                                        class="external-reference-view"
+                                    >
 
-                                        {% if component.external_reference_is_archive %}
+                                        {% if component.external_reference_url %}
 
                                             <a
                                                 href="{{ component.external_reference_url }}"
-                                                download
-                                                contenteditable="false"
+                                                {% if component.external_reference_is_archive %}
+                                                    download
+                                                {% else %}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                {% endif %}
                                             >
                                                 {{ component.external_reference_url }}
                                             </a>
 
                                         {% else %}
 
-                                            <a
-                                                href="{{ component.external_reference_url }}"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                contenteditable="false"
-                                            >
-                                                {{ component.external_reference_url }}
-                                            </a>
+                                            {{ component.external_references }}
 
                                         {% endif %}
 
-                                    {% else %}
-
-                                        {{ component.external_references }}
-
-                                    {% endif %}
+                                    </div>
 
                                 </div>
 
@@ -602,7 +470,9 @@
                 type="button"
                 id="save-changes"
             >
+
                 Сохранить изменения
+
             </button>
 
 
@@ -610,15 +480,19 @@
                 href="{% url 'generate_sbom' %}"
                 class="button-link"
             >
+
                 Сформировать SBOM JSON
+
             </a>
 
 
             <a
-                href="{% url 'compare_sbom' %}"
+                href="{% url 'generate_docx' %}"
                 class="button-link"
             >
-                Сравнить с эталонным SBOM
+
+                Сформировать DOCX
+
             </a>
 
         </div>
@@ -633,7 +507,9 @@
             <a
                 href="?page={{ page_obj.previous_page_number }}"
             >
+
                 Назад
+
             </a>
 
         {% endif %}
@@ -654,7 +530,9 @@
             <a
                 href="?page={{ page_obj.next_page_number }}"
             >
+
                 Далее
+
             </a>
 
         {% endif %}
@@ -698,6 +576,97 @@
         }
 
 
+        tableBody.addEventListener(
+            "click",
+            (event) => {
+
+                if (
+                    event.target.closest(
+                        ".external-reference-view a"
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                const cell =
+                    event.target.closest(
+                        ".external-reference-cell"
+                    );
+
+
+                if (!cell) {
+
+                    return;
+
+                }
+
+
+                if (
+                    cell.querySelector(
+                        ".external-reference-editor"
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                const view =
+                    cell.querySelector(
+                        ".external-reference-view"
+                    );
+
+
+                if (!view) {
+
+                    return;
+
+                }
+
+
+                const textarea =
+                    document.createElement(
+                        "textarea"
+                    );
+
+
+                textarea.className =
+                    "external-reference-editor";
+
+
+                textarea.dataset.field =
+                    "external_references";
+
+
+                textarea.value =
+                    view.textContent.trim();
+
+
+                textarea.dataset.originalValue =
+                    textarea.value;
+
+
+                view.replaceWith(
+                    textarea
+                );
+
+
+                textarea.focus();
+
+
+                textarea.setSelectionRange(
+                    textarea.value.length,
+                    textarea.value.length
+                );
+
+            }
+        );
+
+
         saveButton.addEventListener(
             "click",
             async () => {
@@ -707,15 +676,18 @@
                         "tbody tr[data-id]"
                     );
 
+
                 const changes = [];
 
 
                 rows.forEach((row) => {
 
                     const change = {
+
                         id: Number(
                             row.dataset.id
                         ),
+
                     };
 
 
@@ -759,7 +731,9 @@
 
                     if (hasChanges) {
 
-                        changes.push(change);
+                        changes.push(
+                            change
+                        );
 
                     }
 
@@ -797,12 +771,14 @@
 
                                     "X-CSRFToken":
                                         csrfToken,
+
                                 },
 
                                 body:
                                     JSON.stringify(
                                         changes
                                     ),
+
                             }
                         );
 
@@ -870,24 +846,6 @@
                     getFieldValue(field);
 
             });
-
-
-        tableBody.addEventListener(
-            "click",
-            (event) => {
-
-                if (
-                    event.target.closest(
-                        ".external-reference-editor a"
-                    )
-                ) {
-
-                    return;
-
-                }
-
-            }
-        );
 
     </script>
 

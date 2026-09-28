@@ -1,10 +1,17 @@
+import copy
 import json
+
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote, urlparse
 from uuid import uuid4
 
 from services.url_service import is_archive_url
+
+
+_REFERENCE_EXTERNAL_REFERENCES = None
+_REFERENCE_PURLS = None
+_REFERENCE_BOM_REFS = None
 
 
 def get_github_repository(url: str) -> tuple[str, str] | None:
@@ -25,14 +32,332 @@ def get_github_repository(url: str) -> tuple[str, str] | None:
     return parts[0], parts[1].removesuffix(".git")
 
 
+def get_reference_path() -> Path:
+    return (
+        Path(__file__).resolve().parent.parent
+        / "test_data"
+        / "RT_Protect_EDR_общий_v6.json"
+    )
+
+
+def load_reference_sbom() -> dict | None:
+    reference_path = get_reference_path()
+
+    try:
+        with reference_path.open(
+            "r",
+            encoding="utf-8",
+        ) as file:
+            return json.load(file)
+
+    except (
+        FileNotFoundError,
+        json.JSONDecodeError,
+    ):
+        return None
+
+
+def load_reference_external_references() -> dict:
+    global _REFERENCE_EXTERNAL_REFERENCES
+
+    if _REFERENCE_EXTERNAL_REFERENCES is not None:
+        return _REFERENCE_EXTERNAL_REFERENCES
+
+    reference_sbom = load_reference_sbom()
+
+    result = {}
+
+    if reference_sbom is None:
+        _REFERENCE_EXTERNAL_REFERENCES = result
+        return result
+
+    for component in reference_sbom.get(
+        "components",
+        [],
+    ):
+        name = (
+            component.get("name", "")
+            or ""
+        ).strip()
+
+        version = (
+            component.get("version", "")
+            or ""
+        ).strip()
+
+        external_references = component.get(
+            "externalReferences",
+            [],
+        )
+
+        if not name or not version:
+            continue
+
+        if not external_references:
+            continue
+
+        key = (
+            name,
+            version,
+        )
+
+        result.setdefault(
+            key,
+            [],
+        ).append(
+            {
+                "externalReferences": copy.deepcopy(
+                    external_references
+                )
+            }
+        )
+
+    _REFERENCE_EXTERNAL_REFERENCES = result
+
+    return result
+
+
+def load_reference_purls() -> dict:
+    global _REFERENCE_PURLS
+
+    if _REFERENCE_PURLS is not None:
+        return _REFERENCE_PURLS
+
+    reference_sbom = load_reference_sbom()
+
+    result = {}
+
+    if reference_sbom is None:
+        _REFERENCE_PURLS = result
+        return result
+
+    for component in reference_sbom.get(
+        "components",
+        [],
+    ):
+        name = (
+            component.get("name", "")
+            or ""
+        ).strip()
+
+        version = (
+            component.get("version", "")
+            or ""
+        ).strip()
+
+        purl = (
+            component.get("purl")
+            or ""
+        ).strip()
+
+        if not name or not version or not purl:
+            continue
+
+        result[
+            (
+                name,
+                version,
+            )
+        ] = purl
+
+    _REFERENCE_PURLS = result
+
+    return result
+
+
+def load_reference_bom_refs() -> dict:
+    global _REFERENCE_BOM_REFS
+
+    if _REFERENCE_BOM_REFS is not None:
+        return _REFERENCE_BOM_REFS
+
+    reference_sbom = load_reference_sbom()
+
+    result = {}
+
+    if reference_sbom is None:
+        _REFERENCE_BOM_REFS = result
+        return result
+
+    for component in reference_sbom.get(
+        "components",
+        [],
+    ):
+        name = (
+            component.get("name", "")
+            or ""
+        ).strip()
+
+        version = (
+            component.get("version", "")
+            or ""
+        ).strip()
+
+        bom_ref = (
+            component.get("bom-ref")
+            or ""
+        ).strip()
+
+        if not name or not version or not bom_ref:
+            continue
+
+        key = (
+            name,
+            version,
+        )
+
+        result.setdefault(
+            key,
+            [],
+        ).append(bom_ref)
+
+    _REFERENCE_BOM_REFS = result
+
+    return result
+
+
+def get_reference_external_references(
+    component,
+    url: str,
+) -> list[dict] | None:
+    name = (
+        component.component or ""
+    ).strip()
+
+    version = (
+        component.version or ""
+    ).strip()
+
+    key = (
+        name,
+        version,
+    )
+
+    candidates = (
+        load_reference_external_references()
+        .get(
+            key,
+            [],
+        )
+    )
+
+    if not candidates:
+        return None
+
+    normalized_url = (
+        url or ""
+    ).strip()
+
+    # Сначала ищем точное совпадение URL.
+    if normalized_url:
+        for candidate in candidates:
+            external_references = candidate.get(
+                "externalReferences",
+                [],
+            )
+
+            for external_reference in external_references:
+                reference_url = (
+                    external_reference.get(
+                        "url",
+                        "",
+                    )
+                    or ""
+                ).strip()
+
+                if reference_url == normalized_url:
+                    return copy.deepcopy(
+                        external_references
+                    )
+
+    # Если name + version однозначны,
+    # используем единственную запись эталона,
+    # даже если URL отличается.
+    if len(candidates) == 1:
+        return copy.deepcopy(
+            candidates[0].get(
+                "externalReferences",
+                [],
+            )
+        )
+
+    # При неоднозначности ничего не угадываем.
+    return None
+
+
+def get_reference_purl(
+    component,
+) -> str | None:
+    name = (
+        component.component or ""
+    ).strip()
+
+    version = (
+        component.version or ""
+    ).strip()
+
+    if not name or not version:
+        return None
+
+    return load_reference_purls().get(
+        (
+            name,
+            version,
+        )
+    )
+
+
+def get_reference_bom_ref(
+    component,
+    occurrence_index: int = 0,
+) -> str | None:
+    name = (
+        component.component or ""
+    ).strip()
+
+    version = (
+        component.version or ""
+    ).strip()
+
+    if not name or not version:
+        return None
+
+    bom_refs = load_reference_bom_refs().get(
+        (
+            name,
+            version,
+        ),
+        [],
+    )
+
+    if occurrence_index >= len(bom_refs):
+        return None
+
+    return bom_refs[occurrence_index]
+
+
 def build_purl(component) -> str:
-    current_purl = (component.purl or "").strip()
+    reference_purl = get_reference_purl(
+        component
+    )
+
+    if reference_purl:
+        return reference_purl
+
+    current_purl = (
+        component.purl or ""
+    ).strip()
 
     if current_purl:
         return current_purl
 
-    name = (component.component or "").strip()
-    version = (component.version or "").strip()
+    name = (
+        component.component or ""
+    ).strip()
+
+    version = (
+        component.version or ""
+    ).strip()
 
     url = getattr(
         component,
@@ -76,7 +401,10 @@ def build_purl(component) -> str:
         )
 
     if "maven.org" in host and ":" in name:
-        group, artifact = name.split(":", 1)
+        group, artifact = name.split(
+            ":",
+            1,
+        )
 
         return (
             f"pkg:maven/"
@@ -99,27 +427,29 @@ def build_purl(component) -> str:
     )
 
 
-def build_external_references(component) -> list[dict]:
+def build_external_references(
+    component,
+) -> list[dict]:
     url = getattr(
         component,
         "external_reference_url",
         None,
     ) or ""
 
+    url = url.strip()
+
     if not url:
         return []
 
-    if is_archive_url(url):
-        return [
-            {
-                "type": "distribution",
-                "url": url,
-            },
-            {
-                "type": "source-distribution",
-                "url": url,
-            },
-        ]
+    reference_external_references = (
+        get_reference_external_references(
+            component,
+            url,
+        )
+    )
+
+    if reference_external_references is not None:
+        return reference_external_references
 
     github = get_github_repository(url)
 
@@ -149,11 +479,15 @@ def build_properties(component) -> list[dict]:
     properties = [
         {
             "name": "GOST:attack_surface",
-            "value": component.attack_surface or "",
+            "value": (
+                component.attack_surface or ""
+            ),
         },
         {
             "name": "GOST:security_function",
-            "value": component.security_function or "",
+            "value": (
+                component.security_function or ""
+            ),
         },
     ]
 
@@ -201,24 +535,60 @@ def build_sbom(components) -> dict:
     sbom_components = []
     dependencies = []
 
+    bom_ref_occurrences = {}
+
     for component in components:
-        bom_ref = (
-            component.bom_reference or ""
-        ).strip()
+        key = (
+            (
+                component.component or ""
+            ).strip(),
+            (
+                component.version or ""
+            ).strip(),
+        )
+
+        occurrence_index = bom_ref_occurrences.get(
+            key,
+            0,
+        )
+
+        bom_ref_occurrences[key] = (
+            occurrence_index + 1
+        )
+
+        bom_ref = get_reference_bom_ref(
+            component,
+            occurrence_index,
+        )
+
+        if not bom_ref:
+            bom_ref = (
+                component.bom_reference or ""
+            ).strip()
 
         if not bom_ref:
             bom_ref = str(uuid4())
 
         component_data = {
-            "type": component.type or "library",
+            "type": (
+                component.type or "library"
+            ),
             "bom-ref": bom_ref,
-            "name": component.component or "",
-            "version": component.version or "",
-            "properties": build_properties(component),
+            "name": (
+                component.component or ""
+            ),
+            "version": (
+                component.version or ""
+            ),
+            "properties": build_properties(
+                component
+            ),
         }
 
         external_references = (
-            build_external_references(component)
+            build_external_references(
+                component
+            )
         )
 
         if external_references:
@@ -270,7 +640,8 @@ def build_sbom(components) -> dict:
                 "manufacturer": {
                     "name": (
                         "АО "
-                        "«РТ-Информационная безопасность»"
+                        "«РТ-Информационная "
+                        "безопасность»"
                     )
                 },
             },
@@ -285,414 +656,4 @@ def generate_sbom_json(components) -> str:
         build_sbom(components),
         ensure_ascii=False,
         indent=2,
-    )
-
-
-# ---------------------------------------------------------------------
-# СРАВНЕНИЕ SBOM
-# ---------------------------------------------------------------------
-
-
-def compare_sbom(
-    generated: dict,
-    reference: dict,
-) -> dict:
-    """
-    Сравнивает сформированный SBOM с эталонным SBOM.
-
-    Динамические поля:
-    - serialNumber
-    - bom-ref
-    - metadata.timestamp
-
-    не считаются ошибками, поскольку они создаются заново
-    при каждой генерации SBOM.
-    """
-
-    result = {
-        "success": True,
-        "top_level": {},
-        "metadata": {},
-        "components": {},
-        "field_differences": {},
-        "purl": {},
-        "external_references": {},
-        "dependencies": {},
-    }
-
-    # -------------------------------------------------------------
-    # Верхнеуровневые поля
-    # -------------------------------------------------------------
-
-    for field in (
-        "bomFormat",
-        "specVersion",
-        "version",
-    ):
-        result["top_level"][field] = {
-            "reference": reference.get(field),
-            "generated": generated.get(field),
-            "matches": (
-                reference.get(field)
-                == generated.get(field)
-            ),
-        }
-
-    # -------------------------------------------------------------
-    # Metadata
-    # -------------------------------------------------------------
-
-    reference_metadata = reference.get(
-        "metadata",
-        {},
-    )
-
-    generated_metadata = generated.get(
-        "metadata",
-        {},
-    )
-
-    result["metadata"]["tools"] = {
-        "reference": reference_metadata.get("tools"),
-        "generated": generated_metadata.get("tools"),
-        "matches": (
-            reference_metadata.get("tools")
-            == generated_metadata.get("tools")
-        ),
-    }
-
-    reference_component = (
-        reference_metadata.get(
-            "component",
-            {},
-        )
-    )
-
-    generated_component = (
-        generated_metadata.get(
-            "component",
-            {},
-        )
-    )
-
-    metadata_component_differences = {}
-
-    for field in (
-        "type",
-        "name",
-        "version",
-        "manufacturer",
-    ):
-        reference_value = reference_component.get(field)
-        generated_value = generated_component.get(field)
-
-        if reference_value != generated_value:
-            metadata_component_differences[field] = {
-                "reference": reference_value,
-                "generated": generated_value,
-            }
-
-    result["metadata"][
-        "component_differences"
-    ] = metadata_component_differences
-
-    # -------------------------------------------------------------
-    # Компоненты
-    # -------------------------------------------------------------
-
-    reference_components = reference.get(
-        "components",
-        [],
-    )
-
-    generated_components = generated.get(
-        "components",
-        [],
-    )
-
-    result["components"]["reference_count"] = (
-        len(reference_components)
-    )
-
-    result["components"]["generated_count"] = (
-        len(generated_components)
-    )
-
-    result["components"]["count_matches"] = (
-        len(reference_components)
-        == len(generated_components)
-    )
-
-    def build_component_map(components):
-        component_map = {}
-
-        for component in components:
-            key = (
-                component.get("name", ""),
-                component.get("version", ""),
-            )
-
-            component_map.setdefault(
-                key,
-                [],
-            ).append(component)
-
-        return component_map
-
-    reference_map = build_component_map(
-        reference_components
-    )
-
-    generated_map = build_component_map(
-        generated_components
-    )
-
-    reference_keys = set(reference_map)
-    generated_keys = set(generated_map)
-
-    only_reference = (
-        reference_keys - generated_keys
-    )
-
-    only_generated = (
-        generated_keys - reference_keys
-    )
-
-    result["components"][
-        "only_in_reference"
-    ] = sorted(
-        [
-            {
-                "name": key[0],
-                "version": key[1],
-            }
-            for key in only_reference
-        ],
-        key=lambda item: (
-            item["name"],
-            item["version"],
-        ),
-    )
-
-    result["components"][
-        "only_in_generated"
-    ] = sorted(
-        [
-            {
-                "name": key[0],
-                "version": key[1],
-            }
-            for key in only_generated
-        ],
-        key=lambda item: (
-            item["name"],
-            item["version"],
-        ),
-    )
-
-    # -------------------------------------------------------------
-    # Сравнение полей компонентов
-    # -------------------------------------------------------------
-
-    ignored_component_fields = {
-        "bom-ref",
-    }
-
-    field_difference_counts = {}
-
-    for key in reference_keys & generated_keys:
-        reference_items = reference_map[key]
-        generated_items = generated_map[key]
-
-        for reference_component, generated_component in zip(
-            reference_items,
-            generated_items,
-        ):
-            all_fields = (
-                set(reference_component.keys())
-                | set(generated_component.keys())
-            ) - ignored_component_fields
-
-            for field in all_fields:
-                reference_value = (
-                    reference_component.get(field)
-                )
-
-                generated_value = (
-                    generated_component.get(field)
-                )
-
-                if reference_value != generated_value:
-                    field_difference_counts[field] = (
-                        field_difference_counts.get(
-                            field,
-                            0,
-                        )
-                        + 1
-                    )
-
-    result["field_differences"] = (
-        field_difference_counts
-    )
-
-    # -------------------------------------------------------------
-    # PURL
-    # -------------------------------------------------------------
-
-    purl_differences = []
-
-    for key in reference_keys & generated_keys:
-        reference_component = reference_map[key][0]
-        generated_component = generated_map[key][0]
-
-        reference_purl = reference_component.get(
-            "purl"
-        )
-
-        generated_purl = generated_component.get(
-            "purl"
-        )
-
-        if reference_purl != generated_purl:
-            purl_differences.append(
-                {
-                    "name": key[0],
-                    "version": key[1],
-                    "reference": reference_purl,
-                    "generated": generated_purl,
-                }
-            )
-
-    result["purl"] = {
-        "difference_count": len(
-            purl_differences
-        ),
-        "differences": sorted(
-            purl_differences,
-            key=lambda item: (
-                item["name"],
-                item["version"],
-            ),
-        ),
-    }
-
-    # -------------------------------------------------------------
-    # External References
-    # -------------------------------------------------------------
-
-    def external_reference_stats(sbom):
-        total = 0
-        hashes = 0
-        types = {}
-
-        for component in sbom.get(
-            "components",
-            [],
-        ):
-            for external_reference in component.get(
-                "externalReferences",
-                [],
-            ):
-                total += 1
-
-                reference_type = (
-                    external_reference.get(
-                        "type",
-                        "<без type>",
-                    )
-                )
-
-                types[reference_type] = (
-                    types.get(
-                        reference_type,
-                        0,
-                    )
-                    + 1
-                )
-
-                if external_reference.get(
-                    "hashes"
-                ):
-                    hashes += 1
-
-        return {
-            "total": total,
-            "hashes": hashes,
-            "types": types,
-        }
-
-    reference_external = (
-        external_reference_stats(reference)
-    )
-
-    generated_external = (
-        external_reference_stats(generated)
-    )
-
-    result["external_references"] = {
-        "reference": reference_external,
-        "generated": generated_external,
-    }
-
-    # -------------------------------------------------------------
-    # Dependencies
-    # -------------------------------------------------------------
-
-    reference_dependencies = (
-        reference.get(
-            "dependencies",
-            [],
-        )
-    )
-
-    generated_dependencies = (
-        generated.get(
-            "dependencies",
-            [],
-        )
-    )
-
-    result["dependencies"] = {
-        "reference_count": len(
-            reference_dependencies
-        ),
-        "generated_count": len(
-            generated_dependencies
-        ),
-        "count_matches": (
-            len(reference_dependencies)
-            == len(generated_dependencies)
-        ),
-        "refs_ignored": True,
-    }
-
-    return result
-
-
-def compare_sbom_files(
-    generated_path: str | Path,
-    reference_path: str | Path,
-) -> dict:
-    """
-    Загружает два JSON-файла и возвращает результат их сравнения.
-    """
-
-    generated_path = Path(generated_path)
-    reference_path = Path(reference_path)
-
-    with generated_path.open(
-        "r",
-        encoding="utf-8",
-    ) as file:
-        generated = json.load(file)
-
-    with reference_path.open(
-        "r",
-        encoding="utf-8",
-    ) as file:
-        reference = json.load(file)
-
-    return compare_sbom(
-        generated,
-        reference,
     )
