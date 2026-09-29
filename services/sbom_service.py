@@ -248,7 +248,6 @@ def get_reference_external_references(
         url or ""
     ).strip()
 
-    # Сначала ищем точное совпадение URL.
     if normalized_url:
         for candidate in candidates:
             external_references = candidate.get(
@@ -270,9 +269,6 @@ def get_reference_external_references(
                         external_references
                     )
 
-    # Если name + version однозначны,
-    # используем единственную запись эталона,
-    # даже если URL отличается.
     if len(candidates) == 1:
         return copy.deepcopy(
             candidates[0].get(
@@ -281,7 +277,6 @@ def get_reference_external_references(
             )
         )
 
-    # При неоднозначности ничего не угадываем.
     return None
 
 

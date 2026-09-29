@@ -165,12 +165,6 @@ def _get_reference_belonging(
     reference_value: str,
     generated_value: str,
 ) -> str:
-    """
-    Если значение из эталона и значение,
-    рассчитанное по данным БД, совпадают
-    по смыслу, сохраняем точное написание
-    эталона.
-    """
 
     reference_normalized = (
         _normalize_belonging(
@@ -198,19 +192,7 @@ def _get_reference_address(
     reference_value: str,
     generated_value: str,
 ) -> str:
-    """
-    Если URL из БД совпадает с URL,
-    содержащимся в эталонной ячейке,
-    сохраняем всю ячейку эталона.
-
-    Это позволяет сохранить дополнительную
-    информацию после URL, например:
-    сведения о патче и контрольной сумме.
-
-    Если URL изменён пользователем,
-    используется новое значение из БД.
-    """
-
+   
     reference_value = str(
         reference_value or ""
     ).strip()
@@ -285,14 +267,7 @@ def _get_reference_table(root):
 
 
 def _get_component_rows(table):
-    """
-    Получает строки компонентов в том порядке,
-    в котором они находятся в эталонном DOCX.
-
-    Заголовок и строки разделов не попадают
-    в результат.
-    """
-
+   
     rows = table.findall(
         "./" + _word_tag("tr")
     )
@@ -354,10 +329,6 @@ def _get_component_rows(table):
 def _build_component_map(
     components,
 ):
-    """
-    Создаёт очереди компонентов по ключу
-    (название, версия).
-    """
 
     component_map = defaultdict(
         deque
@@ -396,11 +367,7 @@ def _order_components_by_template(
     components,
     component_rows,
 ):
-    """
-    Выстраивает компоненты БД в том же порядке,
-    в котором они находятся в эталонном DOCX.
-    """
-
+    
     component_map = (
         _build_component_map(
             components
@@ -621,11 +588,6 @@ def build_docx(
                 reference_address,
                 generated_address,
             )
-
-            # -----------------------------------------------------
-            # Первый столбец № п/п оставляем
-            # из эталонного шаблона.
-            # -----------------------------------------------------
 
             _set_cell_text(
                 cells[1],

@@ -310,10 +310,6 @@ def generate_sbom(request):
 
 def generate_docx_file(request):
 
-    """
-    Формирует DOCX с перечнем
-    заимствованных программных компонентов.
-    """
 
     components = list(
         Component.objects

@@ -23,11 +23,7 @@ ARCHIVE_EXTENSIONS = (
 
 
 def get_valid_url(value: str) -> str | None:
-    """
-    Находит первый HTTP/HTTPS URL
-    внутри значения.
-    """
-
+   
     value = (value or "").strip()
 
     if not value:
@@ -61,11 +57,7 @@ def get_valid_url(value: str) -> str | None:
 
 
 def is_archive_url(url: str) -> bool:
-    """
-    Определяет, указывает ли URL
-    на архивный файл.
-    """
-
+   
     if not url:
         return False
 
